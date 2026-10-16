@@ -1,0 +1,269 @@
+/* 記事一覧全体 */
+.article-list {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 36px 40px;
+  box-sizing: border-box;
+}
+
+/* ヘッダー */
+.article-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 30px;
+}
+
+/* 見出し */
+.article-list-header h1 {
+  margin: 0;
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+/* 新規作成ボタン */
+.create-button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  background-color: #2563eb;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.create-button:hover {
+  background-color: #1d4ed8;
+}
+
+.create-button:active {
+  transform: translateY(1px);
+}
+
+/* 記事がない場合 */
+.no-articles {
+  padding: 40px;
+  text-align: center;
+  color: #666666;
+  font-size: 16px;
+}
+
+/* テーブルのスクロール領域 */
+.article-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid #b9c0ca;
+}
+
+/* 一覧テーブル */
+.article-table {
+  width: 100%;
+  min-width: 1150px;
+  table-layout: fixed;
+  border-collapse: collapse;
+  background-color: #ffffff;
+}
+
+/* テーブルヘッダー */
+.article-table th {
+  position: relative;
+  padding: 16px;
+  border: 1px solid #b9c0ca;
+  background-color: #e5e7eb;
+  text-align: left;
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* データセル */
+.article-table td {
+  padding: 16px;
+  border: 1px solid #c4cad3;
+  vertical-align: middle;
+  overflow-wrap: anywhere;
+}
+
+/* 通常行 */
+.article-table tbody tr {
+  background-color: #ffffff;
+}
+
+/* 通常行ホバー */
+.article-table tbody tr:not(.archived-row):hover {
+  background-color: #f8fafc;
+}
+
+/* ステータス */
+.status-area {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* ステータスバッジ共通 */
+.status-badge {
+  display: inline-block;
+  min-width: 70px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* 下書き */
+.status-draft {
+  background-color: #e5e7eb;
+  color: #4b5563;
+}
+
+/* 公開 */
+.status-published {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+/* アーカイブ */
+.status-archived {
+  background-color: #aeb6c2;
+  color: #374151;
+}
+
+/* ステータス変更 */
+.status-select {
+  padding: 6px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  background-color: #ffffff;
+  color: #1f2937;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* タイトル */
+.article-title {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+/* アーカイブ済みの記事全体 */
+.article-table tbody tr.archived-row {
+  background-color: #cbd0d6;
+  color: #4b5563;
+}
+
+/* アーカイブ行ホバー */
+.article-table tbody tr.archived-row:hover {
+  background-color: #bfc5cd;
+}
+
+/* アーカイブ行のタイトル */
+.article-table tbody tr.archived-row .article-title {
+  color: #5b6472;
+}
+
+/* アーカイブ済みラベル */
+.archived-label {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: #4b5563;
+}
+
+/* 操作ボタン */
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.edit-button,
+.delete-button {
+  padding: 7px 14px;
+  border-radius: 5px;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* 編集 */
+.edit-button {
+  border: 1px solid #2563eb;
+  background-color: #ffffff;
+  color: #2563eb;
+}
+
+.edit-button:hover:not(:disabled) {
+  background-color: #eff6ff;
+}
+
+/* 削除 */
+.delete-button {
+  border: 1px solid #dc2626;
+  background-color: #ffffff;
+  color: #dc2626;
+}
+
+.delete-button:hover:not(:disabled) {
+  background-color: #fef2f2;
+}
+
+/* 操作不可 */
+.edit-button:disabled,
+.delete-button:disabled,
+.status-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 列幅変更用ハンドル */
+.column-resizer {
+  position: absolute;
+  top: 0;
+  right: -4px;
+  width: 8px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 2;
+  touch-action: none;
+}
+
+/* ドラッグ位置を表示 */
+.column-resizer:hover {
+  background-color: #2563eb;
+}
+
+/* エラー */
+.error-message {
+  margin-bottom: 20px;
+  padding: 15px;
+  border-radius: 5px;
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+/* 画面幅が狭い場合 */
+@media (max-width: 768px) {
+  .article-list {
+    padding: 20px 16px;
+  }
+
+  .article-list-header h1 {
+    font-size: 28px;
+  }
+
+  .create-button {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+}

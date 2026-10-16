@@ -1,0 +1,75 @@
+:root {
+  --text: #374151;
+  --text-h: #111827;
+  --bg: #ffffff;
+  --border: #d1d5db;
+  --accent: #2563eb;
+
+  --sans: system-ui, "Segoe UI", Roboto, sans-serif;
+  --heading: system-ui, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, Consolas, monospace;
+
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--text);
+  background-color: var(--bg);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 全要素のサイズ計算を統一 */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* 画面全体 */
+html,
+body {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* アプリ表示領域 */
+#root {
+  width: 100%;
+  max-width: none;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  border: none;
+  display: block;
+  text-align: left;
+}
+
+/* 見出し */
+h1,
+h2 {
+  font-family: var(--heading);
+  color: var(--text-h);
+}
+
+/* 段落 */
+p {
+  margin: 0;
+}
+
+/* フォーム */
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+/* コード表示 */
+code {
+  font-family: var(--mono);
+}
