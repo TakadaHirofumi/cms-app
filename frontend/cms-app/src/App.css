@@ -1,9 +1,0 @@
-/* アプリケーション共通スタイル */
-#root {
-  width: 100%;
-  min-height: 100vh;
-  margin: 0;
-  padding: 0;
-  border: none;
-  text-align: left;
-}
