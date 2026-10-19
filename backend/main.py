@@ -1,4 +1,4 @@
-# HTTPリクエスト受付
+# APIの受付と制御
 from fastapi import Depends, FastAPI, HTTPException, status
 from sqlalchemy.orm import Session
 from database import Base, engine, get_db
@@ -12,6 +12,7 @@ from schemas import (
 import crud
 
 
+# FastAPIのインスタンスを作成し、タイトルと説明を設定
 app = FastAPI(
     title="CMS API",
     description="記事管理システム用REST API"
@@ -20,7 +21,7 @@ app = FastAPI(
 # SQLAlchemyモデルに基づくテーブル作成
 Base.metadata.create_all(bind=engine)
 
-# 記事一覧取得
+# GET /api/articles：作成日時の降順で記事一覧を返却
 @app.get(
     "/api/articles",
     response_model=list[ArticleResponse]
@@ -30,7 +31,7 @@ def get_articles(
 ):
     return crud.get_articles(db)
 
-# 記事IDによる取得
+# GET /api/articles/{article_id}：指定IDの記事を返却、見つからない場合は404エラー
 @app.get(
     "/api/articles/{article_id}",
     response_model=ArticleResponse
@@ -50,7 +51,7 @@ def get_article(
         )
     return article
 
-# 記事新規作成
+# POST /api/articles：入力データを検証し、下書き記事を新規登録
 @app.post(
     "/api/articles",
     response_model=ArticleResponse,
@@ -65,7 +66,7 @@ def create_article(
         request
     )
 
-# 記事編集
+# PUT /api/articles/{article_id}：指定記事のタイトル、本文を更新
 @app.put(
     "/api/articles/{article_id}",
     response_model=ArticleResponse
@@ -90,7 +91,7 @@ def update_article(
         request
     )
 
-# ステータス変更
+# PATCH /api/articles/{article_id}/status：ステータスと公開日時を更新
 @app.patch(
     "/api/articles/{article_id}/status",
     response_model=ArticleResponse
@@ -115,7 +116,7 @@ def update_article_status(
         request.status
     )
 
-# 記事削除
+# DELETE /api/articles/{article_id}：指定記事を削除
 @app.delete(
     "/api/articles/{article_id}",
     status_code=status.HTTP_204_NO_CONTENT

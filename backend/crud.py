@@ -1,4 +1,4 @@
-# データベース操作
+# 記事テーブルのCRUD（取得・登録・更新・削除）をSQLAlchemyのSessionで実行
 from datetime import datetime
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -6,7 +6,7 @@ from models import Article, ArticleStatus
 from schemas import ArticleCreate, ArticleUpdate
 
 
-# 記事一覧取得
+# 作成日時・記事IDの降順で記事一覧を取得
 def get_articles(db: Session):
     return db.scalars(
         select(Article)
@@ -23,7 +23,7 @@ def get_article_by_id(
 ):
     return db.get(Article, article_id)
 
-# 記事新規作成
+# 記事作成
 def create_article(
     db: Session,
     request: ArticleCreate

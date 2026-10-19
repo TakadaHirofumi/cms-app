@@ -1,4 +1,4 @@
-# DBテーブルに関する定義
+# DBテーブル定義
 from datetime import datetime
 from enum import Enum
 from sqlalchemy import DateTime, Enum as SQLEnum, String, Text

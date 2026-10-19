@@ -32,19 +32,19 @@ class ArticleBase(BaseModel):
 
         return value.strip()
 
-# 記事新規作成用
+# 記事作成用スキーマ
 class ArticleCreate(ArticleBase):
     pass
 
-# 記事編集用
+# 記事編集用スキーマ
 class ArticleUpdate(ArticleBase):
     pass
 
-# ステータス変更用
+# ステータス変更APIのリクエスト形式
 class ArticleStatusUpdate(BaseModel):
     status: ArticleStatus
 
-# APIレスポンス用
+# APIレスポンスのデータ形式
 class ArticleResponse(BaseModel):
     id: int
     title: str

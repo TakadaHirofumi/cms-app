@@ -28,25 +28,25 @@ DATABASE_URL = URL.create(
     database=DB_NAME,
 )
 
-# DBエンジン
+# エンジンを作成し、DB接続の生存確認を有効にする
 engine = create_engine(
     DATABASE_URL,
     echo=True,
     pool_pre_ping=True,
 )
 
-# DBセッション
+# DBセッションの定義
 SessionLocal = sessionmaker(
     autocommit=False,
     autoflush=False,
     bind=engine,
 )
 
-# SQLAlchemyのベースクラス
+# SQLAlchemyのベースクラスの定義
 class Base(DeclarativeBase):
     pass
 
-# FastAPIからDBセッションを取得するための関数
+# DBセッションの取得と解放
 def get_db():
     db = SessionLocal()
 
