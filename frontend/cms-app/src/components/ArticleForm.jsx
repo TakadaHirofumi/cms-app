@@ -7,26 +7,30 @@ import { useNavigate, useParams } from "react-router-dom";
 import { validateArticle } from "../utils/articleValidation";
 import "./ArticleForm.css";
 
+
+// URLに記事IDがある場合は記事編集画面、ない場合は記事作成画面に切り替え
 function ArticleForm() {
+  // 記事ID
   const { id } = useParams();
   const navigate = useNavigate();
-  // idが存在すれば編集、なければ新規作成
+  // 記事IDが存在する場合は編集、存在しない場合は新規作成
   const isEdit = Boolean(id);
-
+  // 記事タイトル
   const [title, setTitle] = useState("");
+  // 記事本文
   const [body, setBody] = useState("");
+  // 編集対象記事の取得状態
   const [loading, setLoading] = useState(isEdit);
+  // 記事の保存状態
   const [saving, setSaving] = useState(false);
-
   // 入力エラー
   const [validationErrors, setValidationErrors] = useState({
     title: "",
   });
-
   // APIエラー
   const [error, setError] = useState("");
 
-  // 編集時のみ既存の記事を取得
+  // 編集時のみ既存の記事を取得し、入力欄へ反映
   useEffect(() => {
     if (!isEdit) return;
     const controller = new AbortController();
@@ -55,7 +59,7 @@ function ArticleForm() {
     return () => controller.abort();
   }, [id, isEdit]);
 
-  // タイトル変更
+  // 記事タイトルの入力値を更新し、直前の記事タイトル入力エラーをクリア
   const handleTitleChange = (event) => {
     setTitle(event.target.value);
     setValidationErrors((prev) => ({
@@ -64,7 +68,7 @@ function ArticleForm() {
     }));
   };
 
-  // 記事保存
+  // 保存前に共通入力チェックを実行し、作成ならPOST、編集ならPUTで保存
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (saving) return;
@@ -115,11 +119,12 @@ function ArticleForm() {
     }
   };
 
-  // キャンセル
+  // キャンセルボタン押下時、保存せず記事一覧画面へ遷移
   const handleCancel = () => {
     navigate("/");
   };
 
+  // 編集対象の取得中はフォームの代わりに読込中メッセージを表示
   if (loading) {
     return (
       <div className="article-form-container">
@@ -128,6 +133,7 @@ function ArticleForm() {
     );
   }
 
+  // 記事作成／編集画面の入力欄、保存ボタン、キャンセルボタン、検証エラー、APIエラーを表示
   return (
     <div className="article-form-container">
       <h1>

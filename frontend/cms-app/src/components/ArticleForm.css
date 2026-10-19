@@ -12,14 +12,17 @@
   font-weight: 700;
 }
 
+/* フォーム本体の背景色 */
 .article-form {
   background-color: #ffffff;
 }
 
+/* 入力項目の余白を統一 */
 .form-group {
   margin-bottom: 24px;
 }
 
+/* 入力項目名を入力欄の上に配置 */
 .form-group label {
   display: block;
   margin-bottom: 8px;
@@ -27,6 +30,7 @@
   font-weight: 600;
 }
 
+/* 必須項目用のラベルを表示 */
 .required {
   display: inline-block;
   margin-left: 8px;
@@ -37,7 +41,9 @@
   font-size: 12px;
 }
 
+/* タイトルと本文入力欄の幅、枠線、余白を共通化 */
 .form-group input,
+/* 本文入力欄のサイズと高さ */
 .form-group textarea {
   width: 100%;
   box-sizing: border-box;
@@ -47,12 +53,14 @@
   font-size: 16px;
 }
 
+/* 選択されている入力欄の枠線を青くする */
 .form-group input:focus,
 .form-group textarea:focus {
   outline: none;
   border-color: #2563eb;
 }
 
+/* 入力エラー表示時、タイトル入力欄を赤くする */
 .form-group input[aria-invalid="true"] {
   border-color: #dc2626;
   background-color: #fffafa;
@@ -64,13 +72,16 @@
   font-family: inherit;
 }
 
+/* 保存・キャンセルボタンを横並び */
 .form-actions {
   display: flex;
   gap: 12px;
   margin-top: 30px;
 }
 
+/* 保存・キャンセルボタンの余白・文字・角丸を共通化 */
 .save-button,
+/* キャンセルボタンは白背景・グレーの枠線で表示 */
 .cancel-button {
   padding: 12px 24px;
   border-radius: 6px;
@@ -79,6 +90,7 @@
   cursor: pointer;
 }
 
+/* 保存ボタンは青色 */
 .save-button {
   border: none;
   background-color: #2563eb;

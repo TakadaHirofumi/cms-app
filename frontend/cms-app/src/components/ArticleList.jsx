@@ -7,12 +7,14 @@ import { useNavigate } from "react-router-dom";
 import "./ArticleList.css";
 
 
+// 記事一覧表の列幅の初期値
 const DEFAULT_COLUMN_WIDTHS = {
   status: 300,
   title: 650,
   actions: 200,
 };
 
+// 記事一覧表の列幅の最小値
 const MIN_COLUMN_WIDTHS = {
   status: 230,
   title: 200,
@@ -20,21 +22,29 @@ const MIN_COLUMN_WIDTHS = {
 };
 
 function ArticleList() {
+  // APIから取得した記事一覧
   const [articles, setArticles] = useState([]);
+  // 記事一覧の初回取得中か確認
   const [loading, setLoading] = useState(true);
+  // API処理などで発生したエラーメッセージ
   const [error, setError] = useState("");
+  // ステータス変更処理中の記事ID
   const [updatingStatusId, setUpdatingStatusId] = useState(null);
+  // 削除処理中の記事ID
   const [deletingId, setDeletingId] = useState(null);
+  // テーブルの各列幅
   const [columnWidths, setColumnWidths] = useState(DEFAULT_COLUMN_WIDTHS);
+  // リサイズ中の列幅
   const [resizing, setResizing] = useState(null);
   const navigate = useNavigate();
+  // 画面表示するステータス
   const statusLabels = {
     DRAFT: "下書き",
     PUBLISHED: "公開",
     ARCHIVED: "アーカイブ",
   };
 
-  // 記事一覧取得
+  // 初回表示時に記事一覧取得
   useEffect(() => {
     const controller = new AbortController();
     const fetchArticles = async () => {
@@ -65,7 +75,7 @@ function ArticleList() {
     return () => controller.abort();
   }, []);
 
-  // ドラッグ開始時の情報を保存
+  // 記事一覧表の列幅変更時の情報を保存
   const handleResizeStart = (event, column) => {
     if (event.button !== 0) return;
     event.preventDefault();
@@ -107,12 +117,12 @@ function ArticleList() {
     };
   }, [resizing]);
 
-  // 新規作成
+  // 新規作成ボタンから記事作成画面へ遷移
   const handleCreate = () => {
     navigate("/articles/new");
   };
 
-  // 編集
+  // 編集ボタンを押下した記事の記事編集画面へ遷移
   const handleEdit = (articleId) => {
     navigate(`/articles/${articleId}/edit`);
   };
@@ -170,7 +180,7 @@ function ArticleList() {
     }
   };
 
-  // 削除
+  // 確認ダイアログ表示後、OKボタン押下されたら記事を削除
   const handleDelete = async (articleId) => {
     const confirmed = window.confirm("この記事を削除しますか？");
     if (!confirmed) return;
@@ -193,6 +203,7 @@ function ArticleList() {
     }
   };
 
+  // 記事一覧の取得中はフォームの代わりに読込中メッセージを表示
   if (loading) {
     return (
       <div className="article-list">
@@ -201,6 +212,7 @@ function ArticleList() {
     );
   }
 
+  // 記事一覧画面のヘッダー、記事一覧表、各種ボタン、エラー表示、記事がない場合のメッセージを表示
   return (
     <div className="article-list">
       <div className="article-list-header">
