@@ -11,6 +11,10 @@ import "./ArticleList.css";
 const DEFAULT_COLUMN_WIDTHS = {
   status: 300,
   title: 650,
+  slug: 210,
+  category: 160,
+  tags: 220,
+  published: 190,
   actions: 200,
 };
 
@@ -18,13 +22,37 @@ const DEFAULT_COLUMN_WIDTHS = {
 const MIN_COLUMN_WIDTHS = {
   status: 230,
   title: 200,
+  slug: 130,
+  category: 100,
+  tags: 120,
+  published: 150,
   actions: 150,
 };
 
 function ArticleList() {
   // APIから取得した記事一覧
   const [articles, setArticles] = useState([]);
-  // 記事一覧の初回取得中か確認
+  // カテゴリの選択肢
+  const [categories, setCategories] = useState([]);
+  // タグの選択肢
+  const [tags, setTags] = useState([]);
+  // ステータスの選択値
+  const [status, setStatus] = useState("");
+  // カテゴリーの選択値
+  const [categoryId, setCategoryId] = useState("");
+  // タグの選択値
+  const [tagIds, setTagIds] = useState([]);
+  // キーワード検索の入力値
+  const [keywordInput, setKeywordInput] = useState("");
+  // キーワード検索の反映値
+  const [keyword, setKeyword] = useState("");
+  // 並び替え条件
+  const [sort, setSort] = useState("updated_desc");
+  // 更新・削除後に記事一覧取得APIを再実行するための値
+  const [reloadVersion, setReloadVersion] = useState(0);
+  // 予約公開の判定用時刻（レンダリング中にDate.now()を実行しない）
+  const [currentTime, setCurrentTime] = useState(null);
+  // 記事一覧を取得中か確認
   const [loading, setLoading] = useState(true);
   // API処理などで発生したエラーメッセージ
   const [error, setError] = useState("");
@@ -36,6 +64,7 @@ function ArticleList() {
   const [columnWidths, setColumnWidths] = useState(DEFAULT_COLUMN_WIDTHS);
   // リサイズ中の列幅
   const [resizing, setResizing] = useState(null);
+  // 各画面への遷移
   const navigate = useNavigate();
   // 画面表示するステータス
   const statusLabels = {
@@ -44,22 +73,75 @@ function ArticleList() {
     ARCHIVED: "アーカイブ",
   };
 
-  // 初回表示時に記事一覧取得
+  // 予約公開の判定用時刻を初期取得し、1分ごとに更新
+  useEffect(() => {
+    const updateCurrentTime = () => setCurrentTime(Date.now());
+    updateCurrentTime();
+    const timerId = setInterval(updateCurrentTime, 60000);
+
+    return () => clearInterval(timerId);
+  }, []);
+
+  // キーワード入力後、350ms待って検索条件に反映
+  useEffect(() => {
+    const timerId = setTimeout(() => setKeyword(keywordInput.trim()), 350);
+
+    return () => clearTimeout(timerId);
+  }, [keywordInput]);
+
+  // カテゴリ・タグの選択肢を取得
+  useEffect(() => {
+    const controller = new AbortController();
+    const fetchOptions = async () => {
+      try {
+        const [categoryResponse, tagResponse] = await Promise.all([
+          axios.get(
+            "/api/categories",
+            { signal: controller.signal }
+          ),
+          axios.get(
+            "/api/tags",
+            { signal: controller.signal }
+          ),
+        ]);
+        if (controller.signal.aborted) return;
+        setCategories(categoryResponse.data);
+        setTags(tagResponse.data);
+      } catch (err) {
+        if (controller.signal.aborted) return;
+        console.error(err);
+        setError("カテゴリ・タグの取得に失敗しました。");
+      }
+    };
+    fetchOptions();
+
+    return () => controller.abort();
+  }, []);
+
+  // 初回表示・検索条件変更・更新／削除成功時に記事一覧取得
   useEffect(() => {
     const controller = new AbortController();
     const fetchArticles = async () => {
+      setLoading(true);
+      setError("");
       try {
+        // 検索条件をFastAPIのクエリパラメータへ設定
+        const params = new URLSearchParams();
+        if (status) params.append("status", status);
+        if (categoryId) params.append("category_id", categoryId);
+        tagIds.forEach((tagId) => params.append("tag_ids", String(tagId)));
+        if (keyword) params.append("keyword", keyword);
+        params.append("sort", sort);
+
         // 記事一覧取得APIを呼び出す
-        const response = await axios.get("/api/articles", {
-          signal: controller.signal,
-        });
-        // 記事作成日時の降順でソート
-        const sortedArticles = [...response.data].sort(
-          (a, b) =>
-            new Date(b.created_at) -
-            new Date(a.created_at)
+        const response = await axios.get(
+          `/api/articles?${params.toString()}`,
+          { signal: controller.signal }
         );
-        setArticles(sortedArticles);
+        if (controller.signal.aborted) return;
+
+        // 並び替えはFastAPI側で実行するため再ソート不要
+        setArticles(response.data);
       } catch (err) {
         if (controller.signal.aborted) return;
         console.error(err);
@@ -73,7 +155,44 @@ function ArticleList() {
     fetchArticles();
 
     return () => controller.abort();
-  }, []);
+  }, [status, categoryId, tagIds, keyword, sort, reloadVersion]);
+
+  // 登録・更新・削除後にGET /api/articlesを再実行
+  const reloadArticles = () => {
+    setReloadVersion((prev) => prev + 1);
+  };
+
+  // タグを選択／解除する
+  const toggleTag = (tagId) => {
+    setTagIds((prev) =>
+      prev.includes(tagId)
+        ? prev.filter((id) => id !== tagId)
+        : [...prev, tagId]
+    );
+  };
+
+  // 検索条件を初期化
+  const resetFilters = () => {
+    setStatus("");
+    setCategoryId("");
+    setTagIds([]);
+    setKeywordInput("");
+    setKeyword("");
+    setSort("updated_desc");
+    reloadArticles();
+  };
+
+  // APIの日時を画面表示用に整形
+  const formatDate = (value) =>
+    value ? String(value).replace("T", " ").slice(0, 16) : "—";
+
+  // 公開日時が未来なら予約中と判定
+  const isScheduled = (article) =>
+    article.status === "PUBLISHED" &&
+    article.published_at != null &&
+    currentTime !== null &&
+    Math.floor(new Date(article.published_at).getTime() / 60000) >
+      Math.floor(currentTime / 60000);
 
   // 記事一覧表の列幅変更時の情報を保存
   const handleResizeStart = (event, column) => {
@@ -127,7 +246,7 @@ function ArticleList() {
     navigate(`/articles/${articleId}/edit`);
   };
 
-  // ステータス変更
+  // ステータス変更後は記事一覧取得APIを再実行
   const handleStatusChange = async (
     articleId,
     newStatus
@@ -135,45 +254,21 @@ function ArticleList() {
     const targetArticle = articles.find(
       (article) => article.id === articleId
     );
-    if (!targetArticle) return;
-    const oldStatus = targetArticle.status;
+    if (!targetArticle || updatingStatusId !== null || deletingId !== null) return;
+    if (targetArticle.status === newStatus) return;
     setError("");
     setUpdatingStatusId(articleId);
 
-    // 先に画面表示を変更
-    setArticles((prevArticles) =>
-      prevArticles.map((article) =>
-        article.id === articleId
-          ? { ...article, status: newStatus }
-          : article
-      )
-    );
-
     try {
       // ステータス変更APIを呼び出す
-      const response = await axios.patch(
+      await axios.patch(
         `/api/articles/${articleId}/status`,
         { status: newStatus }
       );
-
-      setArticles((prevArticles) =>
-        prevArticles.map((article) =>
-          article.id === articleId
-            ? response.data
-            : article
-        )
-      );
+      // 変更後の最新情報を再取得
+      reloadArticles();
     } catch (err) {
       console.error(err);
-
-      setArticles((prevArticles) =>
-        prevArticles.map((article) =>
-          article.id === articleId
-            ? { ...article, status: oldStatus }
-            : article
-        )
-      );
-
       setError("ステータスの変更に失敗しました。");
     } finally {
       setUpdatingStatusId(null);
@@ -182,6 +277,7 @@ function ArticleList() {
 
   // 確認ダイアログ表示後、OKボタン押下されたら記事を削除
   const handleDelete = async (articleId) => {
+    if (updatingStatusId !== null || deletingId !== null) return;
     const confirmed = window.confirm("この記事を削除しますか？");
     if (!confirmed) return;
     setError("");
@@ -189,12 +285,11 @@ function ArticleList() {
 
     try {
       // 削除APIを呼び出す
-      await axios.delete(`/api/articles/${articleId}`);
-      setArticles((prevArticles) =>
-        prevArticles.filter(
-          (article) => article.id !== articleId
-        )
+      await axios.delete(
+        `/api/articles/${articleId}`
       );
+      // 削除後の最新一覧を再取得
+      reloadArticles();
     } catch (err) {
       console.error(err);
       setError("記事の削除に失敗しました。");
@@ -203,15 +298,6 @@ function ArticleList() {
     }
   };
 
-  // 記事一覧の取得中はフォームの代わりに読込中メッセージを表示
-  if (loading) {
-    return (
-      <div className="article-list">
-        読み込み中...
-      </div>
-    );
-  }
-
   // 記事一覧画面のヘッダー、記事一覧表、各種ボタン、エラー表示、記事がない場合のメッセージを表示
   return (
     <div className="article-list">
@@ -219,8 +305,74 @@ function ArticleList() {
         <h1>
           記事一覧
         </h1>
-        <button type="button" className="create-button" onClick={handleCreate}>
-          新規作成
+        <div className="article-list-header-actions">
+          <button type="button" className="management-button"
+            onClick={() => navigate("/categories")}
+          >
+            カテゴリ管理
+          </button>
+          <button type="button" className="management-button"
+            onClick={() => navigate("/tags")}
+          >
+            タグ管理
+          </button>
+          <button type="button" className="create-button" onClick={handleCreate}>
+            新規作成
+          </button>
+        </div>
+      </div>
+
+      {/* ステータス、カテゴリ、タグ、キーワード検索、並び替えのフィルター */}
+      <div className="article-filters">
+        <label>
+          ステータス
+          <select value={status} onChange={(event) => setStatus(event.target.value)}>
+            <option value="">すべて</option>
+            {Object.entries(statusLabels).map(([value, label]) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
+          </select>
+        </label>
+        <label>
+          カテゴリ
+          <select value={categoryId} onChange={(event) => setCategoryId(event.target.value)}>
+            <option value="">すべて</option>
+            {categories.map((category) => (
+              <option key={category.id} value={category.id}>{category.name}</option>
+            ))}
+          </select>
+        </label>
+        <fieldset className="tag-filter">
+          <legend>タグ（複数選択可）</legend>
+          <div className="tag-filter-options">
+            {tags.map((tag) => (
+              <label key={tag.id}>
+                <input type="checkbox" checked={tagIds.includes(tag.id)}
+                  onChange={() => toggleTag(tag.id)}
+                />
+                {tag.name}
+              </label>
+            ))}
+            {tags.length === 0 && <span>タグなし</span>}
+          </div>
+        </fieldset>
+        <label>
+          キーワード検索
+          <input type="search" value={keywordInput}
+            onChange={(event) => setKeywordInput(event.target.value)}
+            placeholder="タイトル・本文を検索"
+          />
+        </label>
+        <label>
+          並び替え
+          <select value={sort} onChange={(event) => setSort(event.target.value)}>
+            <option value="updated_desc">更新日時が新しい順</option>
+            <option value="published_desc">公開日時が新しい順</option>
+            <option value="title_asc">タイトル昇順</option>
+          </select>
+        </label>
+        <button type="button" className="filter-reset-button" onClick={resetFilters}>
+          条件をクリア
         </button>
       </div>
 
@@ -230,9 +382,11 @@ function ArticleList() {
         </p>
       )}
 
-      {articles.length === 0 ? (
+      {loading ? (
+        <p className="no-articles">読み込み中...</p>
+      ) : articles.length === 0 ? (
         <p className="no-articles">
-          記事はありません
+          該当する記事はありません
         </p>
       ) : (
         <div className="article-table-wrapper">
@@ -240,6 +394,10 @@ function ArticleList() {
             <colgroup>
               <col style={{ width: columnWidths.status }}/>
               <col style={{ width: columnWidths.title }}/>
+              <col style={{ width: columnWidths.slug }}/>
+              <col style={{ width: columnWidths.category }}/>
+              <col style={{ width: columnWidths.tags }}/>
+              <col style={{ width: columnWidths.published }}/>
               <col style={{ width: columnWidths.actions }}/>
             </colgroup>
 
@@ -259,6 +417,38 @@ function ArticleList() {
                   <span className="column-resizer"
                     onPointerDown={(event) =>
                       handleResizeStart(event, "title")
+                    }
+                  />
+                </th>
+                <th scope="col">
+                  スラッグ
+                  <span className="column-resizer"
+                    onPointerDown={(event) =>
+                      handleResizeStart(event, "slug")
+                    }
+                  />
+                </th>
+                <th scope="col">
+                  カテゴリ
+                  <span className="column-resizer"
+                    onPointerDown={(event) =>
+                      handleResizeStart(event, "category")
+                    }
+                  />
+                </th>
+                <th scope="col">
+                  タグ
+                  <span className="column-resizer"
+                    onPointerDown={(event) =>
+                      handleResizeStart(event, "tags")
+                    }
+                  />
+                </th>
+                <th scope="col">
+                  公開日時
+                  <span className="column-resizer"
+                    onPointerDown={(event) =>
+                      handleResizeStart(event, "published")
                     }
                   />
                 </th>
@@ -284,6 +474,7 @@ function ArticleList() {
                   }
                 >
                   <td>
+                    {/* ステータスの表示 */}
                     <div className="status-area">
                       <span className={`status-badge status-${article.status.toLowerCase()}`}>
                         {statusLabels[article.status]}
@@ -297,7 +488,7 @@ function ArticleList() {
                         }
                         disabled={
                           updatingStatusId === article.id ||
-                          deletingId === article.id
+                          deletingId !== null
                         }
                         className="status-select"
                         aria-label={`${article.title}のステータス`}
@@ -313,22 +504,34 @@ function ArticleList() {
                         </option>
                       </select>
                     </div>
+                    {/* ステータスがアーカイブの場合、2行目に表示 */}
                     {article.status === "ARCHIVED" && (
                       <span className="archived-label">
                         アーカイブ済み
+                      </span>
+                    )}
+                    {/* ステータスが公開で公開日時が未来日の場合、2行目に表示 */}
+                    {isScheduled(article) && (
+                      <span className="scheduled-label">
+                        予約中
                       </span>
                     )}
                   </td>
                   <td className="article-title">
                     {article.title}
                   </td>
+                  {/* スラッグ、カテゴリー、タグ、公開日時を表示 */}
+                  <td>{article.slug}</td>
+                  <td>{article.category?.name ?? "カテゴリなし"}</td>
+                  <td>{article.tags?.map((tag) => tag.name).join("、") || "—"}</td>
+                  <td>{formatDate(article.published_at)}</td>
                   <td>
                     <div className="action-buttons">
                       <button type="button" className="edit-button"
                         onClick={() =>
                           handleEdit(article.id)
                         }
-                        disabled={deletingId === article.id || updatingStatusId === article.id}
+                        disabled={deletingId !== null || updatingStatusId !== null}
                       >
                         編集
                       </button>
@@ -337,7 +540,7 @@ function ArticleList() {
                         onClick={() =>
                           handleDelete(article.id)
                         }
-                        disabled={deletingId === article.id || updatingStatusId === article.id}
+                        disabled={deletingId !== null || updatingStatusId !== null}
                       >
                         削除
                       </button>

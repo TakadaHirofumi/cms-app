@@ -267,3 +267,111 @@
     font-size: 14px;
   }
 }
+
+/* 管理画面ボタンをヘッダー右側に配置 */
+.article-list-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* 管理画面ボタン */
+.article-list .management-button {
+  padding: 12px 20px;
+  border: 1px solid #9ca3af;
+  border-radius: 6px;
+  background-color: #ffffff;
+  color: #374151;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.article-list .management-button:hover {
+  background-color: #f3f4f6;
+}
+
+/* 絞り込み条件の入力エリア */
+.article-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 14px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 8px;
+  background-color: #f3f5f8;
+}
+
+.article-filters > label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.article-filters select,
+.article-filters input[type="search"] {
+  padding: 8px;
+  border: 1px solid #9ca3af;
+  border-radius: 5px;
+  background-color: #ffffff;
+  color: #1f2937;
+  font-size: 14px;
+}
+
+/* タグの複数選択 */
+.tag-filter {
+  max-width: 360px;
+  padding: 8px 12px;
+  border: 1px solid #b8c0cb;
+  border-radius: 6px;
+}
+
+.tag-filter legend {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.tag-filter-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  max-height: 100px;
+  overflow-y: auto;
+}
+
+.tag-filter-options label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.article-list .filter-reset-button {
+  padding: 8px 14px;
+  border: 1px solid #9ca3af;
+  border-radius: 5px;
+  background-color: #ffffff;
+  color: #374151;
+  cursor: pointer;
+}
+
+/* 予約中ラベル */
+.scheduled-label {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: #92400e;
+}
+
+@media (max-width: 768px) {
+  .article-list .management-button {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+}
