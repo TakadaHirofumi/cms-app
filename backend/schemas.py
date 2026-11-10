@@ -147,3 +147,37 @@ class ArticleResponse(BaseModel):
     model_config = ConfigDict(
         from_attributes=True
     )
+
+# コメント投稿用スキーマ
+class CommentCreate(BaseModel):
+    author_name: str = Field(min_length=1, max_length=50)
+    body: str = Field(min_length=1, max_length=1000)
+
+    @field_validator("author_name", "body")
+    @classmethod
+    def validate_not_blank(cls, value: str) -> str:
+        # 空白のみの入力を拒否
+        if not value.strip():
+            raise ValueError("空白のみでは登録できません。")
+        return value.strip()
+
+# コメント取得用スキーマ
+class CommentResponse(BaseModel):
+    id: int
+    article_id: int
+    author_name: str
+    body: str
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+# リビジョン取得用スキーマ
+class RevisionResponse(BaseModel):
+    id: int
+    article_id: int
+    title: str
+    body: str | None
+    status: ArticleStatus
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)

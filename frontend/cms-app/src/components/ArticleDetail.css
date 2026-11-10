@@ -1,0 +1,115 @@
+/* 記事詳細画面 */
+.article-detail {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 0 24px 48px;
+}
+
+.article-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.article-detail-header h1 {
+  font-size: 32px;
+}
+
+.article-detail button {
+  padding: 9px 16px;
+  border: 1px solid #2563eb;
+  border-radius: 6px;
+  background: #fff;
+  color: #1d4ed8;
+  cursor: pointer;
+}
+
+.article-detail-body {
+  margin: 24px 0;
+  padding: 24px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  overflow-wrap: anywhere;
+}
+
+.article-detail-body em,
+.article-detail-body i {
+  font-style: italic;
+  font-synthesis-style: auto;
+}
+
+.article-comments {
+  margin-top: 32px;
+}
+
+.article-comments ul {
+  list-style: none;
+  padding: 0;
+}
+
+.article-comments li {
+  border-bottom: 1px solid #d1d5db;
+  padding: 14px 0;
+}
+
+.article-comments time {
+  margin-left: 12px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.article-comments li p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.article-comments form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* コメント投稿の必須ラベル */
+.article-comments .comment-required {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background-color: #fee2e2;
+  color: #b91c1c;
+  font-size: 12px;
+}
+
+/* コメント投稿の文字数制限を入力フォームの下に表示 */
+.article-comments .comment-help {
+  display: block;
+  margin-top: -4px;
+  margin-bottom: 8px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.article-comments input, .article-comments textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font: inherit;
+}
+
+.article-comments form button {
+  align-self: flex-start;
+  background: #2563eb;
+  color: white;
+}
+
+.article-comments button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.detail-error {
+  color: #b91c1c;
+}

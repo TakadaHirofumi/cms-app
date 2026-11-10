@@ -138,3 +138,93 @@ class Article(Base):
         back_populates="articles",
         passive_deletes=True
     )
+
+    # 記事に紐付くコメントとリビジョン（削除時はDBのCASCADEを使用）
+    comments: Mapped[list["Comment"]] = relationship(
+        back_populates="article",
+        passive_deletes=True
+    )
+
+    revisions: Mapped[list["Revision"]] = relationship(
+        back_populates="article",
+        passive_deletes=True
+    )
+
+# コメントテーブル定義
+class Comment(Base):
+    __tablename__ = "comment"
+
+    id: Mapped[int] = mapped_column(
+        BigInteger,
+        primary_key=True,
+        autoincrement=True
+    )
+
+    article_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("article.id", ondelete="CASCADE"),
+        nullable=False
+    )
+
+    author_name: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False
+    )
+
+    body: Mapped[str] = mapped_column(
+        Text,
+        nullable=False
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+        server_default=func.now()
+    )
+
+    # コメントから記事を参照
+    article: Mapped[Article] = relationship(
+        back_populates="comments"
+    )
+
+# 記事の変更履歴テーブル定義
+class Revision(Base):
+    __tablename__ = "revision"
+
+    id: Mapped[int] = mapped_column(
+        BigInteger,
+        primary_key=True,
+        autoincrement=True
+    )
+
+    article_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("article.id", ondelete="CASCADE"),
+        nullable=False
+    )
+
+    title: Mapped[str] = mapped_column(
+        String(200),
+        nullable=False
+    )
+    
+    body: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True
+    )
+    
+    status: Mapped[ArticleStatus] = mapped_column(
+        SQLEnum(ArticleStatus),
+        nullable=False
+    )
+    
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+        server_default=func.now()
+    )
+
+    # リビジョンから記事を参照
+    article: Mapped[Article] = relationship(
+        back_populates="revisions"
+    )

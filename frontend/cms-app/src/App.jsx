@@ -4,6 +4,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ArticleList from "./components/ArticleList";
 import ArticleForm from "./components/ArticleForm";
+import ArticleDetail from "./components/ArticleDetail";
 import CategoryManagement from "./components/CategoryManagement";
 import TagManagement from "./components/TagManagement";
 
@@ -19,6 +20,8 @@ function App() {
         <Route path="/articles/new" element={<ArticleForm />} />
         {/* 記事編集画面 */}
         <Route path="/articles/:id/edit" element={<ArticleForm />} />
+        {/* 記事詳細画面 */}
+        <Route path="/articles/:id" element={<ArticleDetail />} />
         {/* カテゴリ管理画面 */}
         <Route path="/categories" element={<CategoryManagement />} />
         {/* タグ管理画面 */}

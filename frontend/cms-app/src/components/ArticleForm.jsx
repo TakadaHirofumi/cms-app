@@ -6,6 +6,8 @@ import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 import { generateSlug, validateArticle } from "../utils/articleValidation";
 import "./ArticleForm.css";
+import RichTextEditor from "./RichTextEditor";
+import RevisionHistory from "./RevisionHistory";
 
 
 // URLに記事IDがある場合は記事編集画面、ない場合は記事作成画面に切り替え
@@ -47,6 +49,10 @@ function ArticleForm() {
   });
   // APIエラー
   const [error, setError] = useState("");
+  // 記事の変更履歴の表示状態
+  const [showRevisions, setShowRevisions] = useState(false);
+  // 復元成功後、フォームに復元結果を反映するための値
+  const [restoreVersion, setRestoreVersion] = useState(0);
 
   // カテゴリ・タグ一覧と編集対象の記事を取得し、入力欄へ反映
   useEffect(() => {
@@ -102,7 +108,7 @@ function ArticleForm() {
     fetchArticle();
 
     return () => controller.abort();
-  }, [id, isEdit]);
+  }, [id, isEdit, restoreVersion]);
 
   // 記事タイトルの入力値を更新し、直前の記事タイトル入力エラーをクリア
   const handleTitleChange = (event) => {
@@ -212,6 +218,13 @@ function ArticleForm() {
     }
   };
 
+  // 復元後に編集内容を再取得し、履歴を閉じる
+  const handleRestored = () => {
+    setShowRevisions(false);
+    setRestoreVersion((prev) => prev + 1);
+    setError("");
+  };
+
   // キャンセルボタン押下時、保存せず記事一覧画面へ遷移
   const handleCancel = () => {
     navigate("/");
@@ -318,13 +331,8 @@ function ArticleForm() {
           <label htmlFor="body">
             本文
           </label>
-          <textarea id="body" value={body}
-            onChange={(event) =>
-              setBody(event.target.value)
-            }
-            disabled={saving}
-            rows={15}
-          />
+          {/* HTML形式の本文を編集できるリッチテキストエディタ */}
+          <RichTextEditor id="body" value={body} onChange={setBody} disabled={saving} />
         </div>
 
         {/* 記事ステータスの選択 */}
@@ -403,6 +411,17 @@ function ArticleForm() {
           </div>
         </fieldset>
 
+        {/* 編集時のみ変更履歴ボタンを表示 */}
+        {isEdit && (
+          <div className="revision-actions">
+            <button type="button" className="cancel-button"
+              onClick={() => setShowRevisions((prev) => !prev)} disabled={saving}
+            >
+              {showRevisions ? "変更履歴を閉じる" : "変更履歴"}
+            </button>
+          </div>
+        )}
+
         <div className="form-actions">
           <button type="submit" className="save-button" disabled={saving}>
             {saving ? "保存中" : "保存"}
@@ -412,6 +431,10 @@ function ArticleForm() {
           </button>
         </div>
       </form>
+      {/* 記事編集画面に変更履歴一覧と復元操作を表示 */}
+      {isEdit && showRevisions && (
+        <RevisionHistory articleId={id} onRestored={handleRestored} />
+      )}
     </div>
   );
 }

@@ -13,7 +13,10 @@ from schemas import (
     ArticleStatusUpdate,
     CategoryCreate,
     CategoryResponse,
-    TagResponse
+    TagResponse,
+    CommentCreate,
+    CommentResponse,
+    RevisionResponse
 )
 import crud
 
@@ -278,3 +281,66 @@ def delete_tag(
         )
 
     persist(db, lambda: crud.delete_tag(db, tag))
+
+# GET /api/articles/{article_id}/comments：記事のコメント一覧を取得
+@app.get(
+    "/api/articles/{article_id}/comments",
+    response_model=list[CommentResponse]
+)
+def get_comments(article_id: int, db: Session = Depends(get_db)):
+    # 対象記事が存在しない場合は404
+    article = crud.get_article_by_id(db, article_id)
+    if article is None:
+        raise HTTPException(status_code=404, detail="記事が見つかりません")
+    return crud.get_comments(db, article_id)
+
+# POST /api/articles/{article_id}/comments：公開済み記事にコメントを投稿
+@app.post(
+    "/api/articles/{article_id}/comments",
+    response_model=CommentResponse,
+    status_code=status.HTTP_201_CREATED
+)
+def create_comment(
+    article_id: int,
+    request: CommentCreate,
+    db: Session = Depends(get_db)
+):
+    # 存在確認とステータス判定をバックエンドで実施
+    article = crud.get_article_by_id(db, article_id)
+    if article is None:
+        raise HTTPException(status_code=404, detail="記事が見つかりません")
+    if article.status != ArticleStatus.PUBLISHED:
+        raise HTTPException(status_code=403, detail="公開済みの記事にのみコメントできます")
+    return persist(db, lambda: crud.create_comment(db, article_id, request))
+
+# GET /api/articles/{article_id}/revisions：変更履歴一覧を取得
+@app.get(
+    "/api/articles/{article_id}/revisions",
+    response_model=list[RevisionResponse]
+)
+def get_revisions(article_id: int, db: Session = Depends(get_db)):
+    article = crud.get_article_by_id(db, article_id)
+    if article is None:
+        raise HTTPException(status_code=404, detail="記事が見つかりません")
+    return crud.get_revisions(db, article_id)
+
+# POST /api/articles/{article_id}/revisions/{revision_id}/restore：過去の内容に復元
+@app.post(
+    "/api/articles/{article_id}/revisions/{revision_id}/restore",
+    response_model=ArticleResponse
+)
+def restore_revision(
+    article_id: int,
+    revision_id: int,
+    db: Session = Depends(get_db)
+):
+    # 対象記事・対象リビジョンの存在と所属関係を確認
+    article = crud.get_article_by_id(db, article_id)
+    if article is None:
+        raise HTTPException(status_code=404, detail="記事が見つかりません")
+    revision = crud.get_revision(db, article_id, revision_id)
+    if revision is None:
+        raise HTTPException(status_code=404, detail="リビジョンが見つかりません")
+    return article_response(
+        persist(db, lambda: crud.restore_revision(db, article, revision))
+    )

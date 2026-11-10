@@ -2,7 +2,7 @@
 from datetime import datetime
 from sqlalchemy import select, or_, func
 from sqlalchemy.orm import Session, selectinload
-from models import Article, ArticleStatus, Category, Tag
+from models import Article, ArticleStatus, Category, Tag, Comment, Revision
 from schemas import ArticleCreate, ArticleUpdate
 
 
@@ -145,6 +145,9 @@ def update_article(
     article: Article,
     request: ArticleUpdate
 ):
+    # 更新前の内容をリビジョンとして保存（記事更新と同じトランザクション）
+    save_revision(db, article)
+
     article.title = request.title
     article.slug = request.slug
     article.body = request.body
@@ -166,6 +169,9 @@ def update_article_status(
     article: Article,
     status: ArticleStatus
 ):
+    # ステータス変更前の内容も履歴として保存
+    save_revision(db, article)
+
     # 新たに公開へ変更した場合は現在日時を設定
     # 既に公開中の場合は予約公開日時を維持する
     if status == ArticleStatus.PUBLISHED and article.status != ArticleStatus.PUBLISHED:
@@ -228,3 +234,67 @@ def delete_tag(
     # article_tagの関連レコードはDBのON DELETE CASCADEで削除
     db.delete(tag)
     db.commit()
+
+# コメント一覧を作成日時・IDの昇順で取得
+def get_comments(db: Session, article_id: int):
+    return db.scalars(
+        select(Comment).where(Comment.article_id == article_id)
+        .order_by(Comment.created_at.asc(), Comment.id.asc())
+    ).all()
+
+# 公開済み記事にコメントを登録
+def create_comment(db: Session, article_id: int, request):
+    comment = Comment(
+        article_id=article_id,
+        author_name=request.author_name,
+        body=request.body
+    )
+    db.add(comment)
+    db.commit()
+    db.refresh(comment)
+    return comment
+
+# 記事の更新前スナップショットを保存（呼び出し元でcommitする）
+def save_revision(db: Session, article: Article):
+    revision = Revision(
+        article_id=article.id,
+        title=article.title,
+        body=article.body,
+        status=article.status
+    )
+    db.add(revision)
+    db.flush()
+    return revision
+
+# リビジョン一覧を新しい順に取得
+def get_revisions(db: Session, article_id: int):
+    return db.scalars(
+        select(Revision).where(Revision.article_id == article_id)
+        .order_by(Revision.created_at.desc(), Revision.id.desc())
+    ).all()
+
+# 指定した記事に属するリビジョンを取得
+def get_revision(db: Session, article_id: int, revision_id: int):
+    return db.scalar(
+        select(Revision).where(
+            Revision.id == revision_id,
+            Revision.article_id == article_id
+        )
+    )
+
+# 復元前の内容を保存してから記事を復元
+def restore_revision(db: Session, article: Article, revision: Revision):
+    save_revision(db, article)
+
+    article.title = revision.title
+    article.body = revision.body
+    article.status = revision.status
+    # リビジョンには公開日時がないため、復元時は現在の公開日時を維持する
+    # 非公開状態への復元では公開日時を解除する
+    if article.status != ArticleStatus.PUBLISHED:
+        article.published_at = None
+    article.updated_at = datetime.now()
+
+    db.commit()
+    return get_article_by_id(db, article.id)
+

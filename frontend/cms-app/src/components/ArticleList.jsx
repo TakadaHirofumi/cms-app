@@ -241,6 +241,11 @@ function ArticleList() {
     navigate("/articles/new");
   };
 
+  // 詳細ボタンを押下した記事の記事詳細画面へ遷移
+  const handleDetail = (articleId) => {
+    navigate(`/articles/${articleId}`);
+  };
+
   // 編集ボタンを押下した記事の記事編集画面へ遷移
   const handleEdit = (articleId) => {
     navigate(`/articles/${articleId}/edit`);
@@ -527,6 +532,13 @@ function ArticleList() {
                   <td>{formatDate(article.published_at)}</td>
                   <td>
                     <div className="action-buttons">
+                      <button type="button" className="edit-button"
+                        onClick={() => handleDetail(article.id)}
+                        disabled={deletingId !== null || updatingStatusId !== null}
+                      >
+                        詳細
+                      </button>
+
                       <button type="button" className="edit-button"
                         onClick={() =>
                           handleEdit(article.id)
