@@ -12,6 +12,59 @@ class ArticleStatus(str, Enum):
     PUBLISHED = "PUBLISHED"
     ARCHIVED = "ARCHIVED"
 
+# ユーザー権限定義
+class UserRole(str, Enum):
+    ADMIN = "ADMIN"
+    EDITOR = "EDITOR"
+    VIEWER = "VIEWER"
+
+# ユーザーテーブル定義
+class User(Base):
+    __tablename__ = "user"
+
+    id: Mapped[int] = mapped_column(
+        BigInteger,
+        primary_key=True,
+        autoincrement=True
+    )
+
+    email: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+        unique=True
+    )
+    
+    password_hash: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False
+    )
+    
+    display_name: Mapped[str] = mapped_column(
+        String(100),
+        nullable=False
+    )
+    
+    role: Mapped[UserRole] = mapped_column(
+        SQLEnum(UserRole),
+        nullable=False,
+        default=UserRole.VIEWER
+    )
+    
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+        server_default=func.now()
+    )
+    
+    # 通知画面を最後に確認した日時
+    notification_checked_at: Mapped[datetime | None] = mapped_column(
+        DateTime,
+        nullable=True
+    )
+
+    # ユーザーが作成した記事
+    articles: Mapped[list["Article"]] = relationship(back_populates="author")
+
 # 記事とタグの中間テーブル（多対多の関連付け）
 article_tag = Table(
     "article_tag",
@@ -32,12 +85,6 @@ class Category(Base):
 
     name: Mapped[str] = mapped_column(
         String(30),
-        nullable=False,
-        unique=True
-    )
-
-    slug: Mapped[str] = mapped_column(
-        String(200),
         nullable=False,
         unique=True
     )
@@ -127,6 +174,15 @@ class Article(Base):
         server_default=func.now(),
         onupdate=func.now()
     )
+
+    # 記事の作成者
+    author_user_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("user.id", ondelete="RESTRICT"),
+        nullable=False
+    )
+
+    author: Mapped[User] = relationship(back_populates="articles")
 
     # カテゴリ、タグを記事詳細のレスポンスで参照
     category: Mapped[Category | None] = relationship(
@@ -227,4 +283,20 @@ class Revision(Base):
     # リビジョンから記事を参照
     article: Mapped[Article] = relationship(
         back_populates="revisions"
+    )
+
+# コメント単位の通知既読情報（通知本文は既存コメントから取得）
+class NotificationRead(Base):
+    __tablename__ = "notification_read"
+
+    user_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("user.id", ondelete="CASCADE"),
+        primary_key=True
+        )
+    
+    comment_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("comment.id", ondelete="CASCADE"),
+        primary_key=True
     )

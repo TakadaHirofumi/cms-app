@@ -28,6 +28,7 @@ function RichTextEditor({ id, value, onChange, disabled = false }) {
     if (editor) editor.setEditable(!disabled);
   }, [editor, disabled]);
 
+  // エディタの装飾ボタンとアクションの定義
   const commands = [
     { label: "太字", action: () => editor.chain().focus().toggleBold().run(), active: "bold" },
     { label: "斜体", action: () => editor.chain().focus().toggleItalic().run(), active: "italic" },

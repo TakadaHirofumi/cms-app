@@ -278,7 +278,8 @@
 }
 
 /* 管理画面ボタン */
-.article-list .management-button {
+.article-list
+.management-button {
   padding: 12px 20px;
   border: 1px solid #9ca3af;
   border-radius: 6px;
@@ -289,16 +290,18 @@
   cursor: pointer;
 }
 
-.article-list .management-button:hover {
+.article-list
+.management-button:hover {
   background-color: #f3f4f6;
 }
 
 /* 絞り込み条件の入力エリア */
 .article-filters {
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
+  flex-wrap: nowrap;
+  align-items: flex-start;
   gap: 14px;
+  overflow-x: auto;
   margin-bottom: 20px;
   padding: 16px;
   border-radius: 8px;
@@ -306,6 +309,7 @@
 }
 
 .article-filters > label {
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -325,6 +329,8 @@
 
 /* タグの複数選択 */
 .tag-filter {
+  flex: 0 0 360px;
+  min-width: 0;
   max-width: 360px;
   padding: 8px 12px;
   border: 1px solid #b8c0cb;
@@ -352,7 +358,10 @@
   white-space: nowrap;
 }
 
-.article-list .filter-reset-button {
+.article-list
+.filter-reset-button {
+  flex: 0 0 auto;
+  margin-top: 24px;
   padding: 8px 14px;
   border: 1px solid #9ca3af;
   border-radius: 5px;
@@ -370,8 +379,37 @@
 }
 
 @media (max-width: 768px) {
-  .article-list .management-button {
+  .article-list
+  .management-button {
     padding: 10px 16px;
     font-size: 14px;
   }
+}
+
+/* フィルター内の項目位置調整 */
+.article-filters {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  overflow-x: auto;
+  gap: 14px;
+}
+
+.article-filters > label {
+  flex: 0 0 auto;
+}
+
+.article-filters > .tag-filter {
+  flex: 0 0 360px;
+  width: 360px;
+  min-width: 360px;
+  max-width: 360px;
+  box-sizing: border-box;
+  align-self: flex-start;
+}
+
+.article-filters
+.tag-filter-options {
+  max-height: 100px;
+  overflow-y: auto;
 }

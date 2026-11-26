@@ -8,10 +8,15 @@ import { generateSlug, validateArticle } from "../utils/articleValidation";
 import "./ArticleForm.css";
 import RichTextEditor from "./RichTextEditor";
 import RevisionHistory from "./RevisionHistory";
+import { useAuth, canEditArticle } from "../utils/authUtils";
 
 
 // URLに記事IDがある場合は記事編集画面、ない場合は記事作成画面に切り替え
 function ArticleForm() {
+  // ログインユーザーの権限と記事作成者を確認
+  const { user } = useAuth();
+  // 記事の編集権限がない場合は操作を許可しない
+  const [permissionDenied, setPermissionDenied] = useState(false);
   // 記事ID
   const { id } = useParams();
   // 記事一覧画面への遷移
@@ -38,6 +43,10 @@ function ArticleForm() {
   const [tags, setTags] = useState([]);
   // タグの入力値
   const [tagInput, setTagInput] = useState("");
+  // タグのエラー
+  const [tagError, setTagError] = useState("");
+  // タグの追加
+  const [addingTag, setAddingTag] = useState(false);
   // 編集対象記事の取得状態
   const [loading, setLoading] = useState(true);
   // 記事の保存状態
@@ -60,12 +69,13 @@ function ArticleForm() {
     const fetchArticle = async () => {
       setLoading(true);
       try {
-        // カテゴリ・タグの選択肢を取得する
         const requests = [
+          // カテゴリ取得APIを呼び出す
           axios.get(
             "/api/categories",
             { signal: controller.signal }
           ),
+          // タグ取得APIを呼び出す
           axios.get(
             "/api/tags",
             { signal: controller.signal }
@@ -87,6 +97,11 @@ function ArticleForm() {
 
         if (articleResponse) {
           const article = articleResponse.data;
+          if (!canEditArticle(user, article)) {
+            setPermissionDenied(true);
+            return;
+          }
+          setPermissionDenied(false);
           setTitle(article.title ?? "");
           setBody(article.body ?? "");
           setSlug(article.slug ?? "");
@@ -108,7 +123,7 @@ function ArticleForm() {
     fetchArticle();
 
     return () => controller.abort();
-  }, [id, isEdit, restoreVersion]);
+  }, [id, isEdit, restoreVersion, user]);
 
   // 記事タイトルの入力値を更新し、直前の記事タイトル入力エラーをクリア
   const handleTitleChange = (event) => {
@@ -137,17 +152,42 @@ function ArticleForm() {
     );
   };
 
-  // 未登録タグも含めて記事のタグ候補に追加
-  const addTag = () => {
+  // タグ追加ボタン押下時にDBへ即時登録する
+  const addTag = async () => {
+    if (addingTag || saving) return;
     const name = tagInput.trim();
-    if (!name) return;
-    if (Array.from(name).length > 30) {
-      setError("タグ名は30文字以内で入力してください。");
+    setTagError("");
+    if (!name) {
+      setTagError("タグ名を入力してください。");
       return;
     }
-    setTagNames((prev) => prev.includes(name) ? prev : [...prev, name]);
-    setTagInput("");
-    setError("");
+    if (Array.from(name).length > 30) {
+      setTagError("タグ名は30文字以内で入力してください。");
+      return;
+    }
+    setAddingTag(true);
+    try {
+      // タグ追加APIを呼び出す
+      const response = await axios.post(
+        "/api/tags",
+        {
+          name
+        }
+      );
+      const savedTag = response.data;
+      setTags((prev) => prev.some((tag) => tag.id === savedTag.id)
+        ? prev : [...prev, savedTag]);
+      setTagNames((prev) => prev.includes(savedTag.name)
+        ? prev : [...prev, savedTag.name]);
+      setTagInput("");
+    } catch (err) {
+      console.error(err);
+      setTagError(err.response?.status === 409
+        ? "タグ名が既に登録されています。再読み込みして確認してください。"
+        : "タグの登録に失敗しました。");
+    } finally {
+      setAddingTag(false);
+    }
   };
 
   // FastAPIのエラーメッセージを取得
@@ -161,7 +201,7 @@ function ArticleForm() {
   // 保存前に共通入力チェックを実行し、作成ならPOST、編集ならPUTで保存
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (saving) return;
+    if (saving || addingTag) return;
     setError("");
 
     // 共通入力チェック
@@ -208,8 +248,8 @@ function ArticleForm() {
         );
       }
 
-      // 保存成功後、記事一覧へ戻る
-      navigate("/");
+      // 保存成功後、記事一覧画面へ戻る
+      navigate("/articles");
     } catch (err) {
       console.error(err);
       setError(getApiError(err));
@@ -227,7 +267,7 @@ function ArticleForm() {
 
   // キャンセルボタン押下時、保存せず記事一覧画面へ遷移
   const handleCancel = () => {
-    navigate("/");
+    navigate("/articles");
   };
 
   // 編集対象の取得中はフォームの代わりに読込中メッセージを表示
@@ -238,6 +278,14 @@ function ArticleForm() {
       </div>
     );
   }
+
+  // 編集対象記事が自分の所有でない場合は操作を許可しない
+  if (permissionDenied) return (
+    <main className="article-form-container">
+      <p role="alert">この記事を編集する権限がありません。</p>
+      <button type="button" onClick={() => navigate("/articles")}>記事一覧へ戻る</button>
+    </main>
+  );
 
   // 記事作成／編集画面の入力欄、保存ボタン、キャンセルボタン、検証エラー、APIエラーを表示
   return (
@@ -375,7 +423,7 @@ function ArticleForm() {
         </div>
 
         {/* 登録済みタグの選択と新規タグの追加 */}
-        <fieldset className="form-group tag-fieldset" disabled={saving}>
+        <fieldset className="form-group tag-fieldset" disabled={saving || addingTag}>
           <legend>タグ（複数選択可）</legend>
           <div className="tag-options">
             {tags.map((tag) => (
@@ -390,7 +438,10 @@ function ArticleForm() {
           <div className="tag-input-row">
             <input aria-label="新しいタグ名" placeholder="新しいタグ名（30文字以内）"
               value={tagInput}
-              onChange={(event) => setTagInput(event.target.value)}
+              onChange={(event) => {
+                setTagInput(event.target.value);
+                setTagError("");
+              }}
               onKeyDown={(event) => {
                 if (event.key === "Enter") {
                   event.preventDefault();
@@ -398,8 +449,13 @@ function ArticleForm() {
                 }
               }}
             />
-            <button type="button" onClick={addTag}>タグ追加</button>
+            <button type="button" onClick={addTag} disabled={addingTag}>
+              {addingTag ? "追加中..." : "タグ追加"}
+            </button>
           </div>
+          {tagError && (
+            <p className="tag-error-message" role="alert">{tagError}</p>
+          )}
           <div className="selected-tags">
             {tagNames.map((name) => (
               <button key={name} type="button" className="selected-tag"
@@ -422,19 +478,20 @@ function ArticleForm() {
           </div>
         )}
 
+        {/* 変更履歴の選択・復元を保存／キャンセルボタンより上に表示 */}
+        {isEdit && showRevisions && (
+          <RevisionHistory articleId={id} onRestored={handleRestored} />
+        )}
+
         <div className="form-actions">
-          <button type="submit" className="save-button" disabled={saving}>
+          <button type="submit" className="save-button" disabled={saving || addingTag}>
             {saving ? "保存中" : "保存"}
           </button>
-          <button type="button" className="cancel-button" onClick={handleCancel} disabled={saving}>
+          <button type="button" className="cancel-button" onClick={handleCancel} disabled={saving || addingTag}>
             キャンセル
           </button>
         </div>
       </form>
-      {/* 記事編集画面に変更履歴一覧と復元操作を表示 */}
-      {isEdit && showRevisions && (
-        <RevisionHistory articleId={id} onRestored={handleRestored} />
-      )}
     </div>
   );
 }

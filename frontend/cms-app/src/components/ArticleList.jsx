@@ -5,12 +5,13 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./ArticleList.css";
+import { useAuth, canEditArticle } from "../utils/authUtils";
 
 
 // 記事一覧表の列幅の初期値
 const DEFAULT_COLUMN_WIDTHS = {
-  status: 300,
-  title: 650,
+  status: 230,
+  title: 550,
   slug: 210,
   category: 160,
   tags: 220,
@@ -30,6 +31,10 @@ const MIN_COLUMN_WIDTHS = {
 };
 
 function ArticleList() {
+  // ログインユーザーの権限を取得
+  const { user } = useAuth();
+  // 記事の管理権限があるか判定
+  const canManage = user?.role === "ADMIN" || user?.role === "EDITOR";
   // APIから取得した記事一覧
   const [articles, setArticles] = useState([]);
   // カテゴリの選択肢
@@ -95,10 +100,12 @@ function ArticleList() {
     const fetchOptions = async () => {
       try {
         const [categoryResponse, tagResponse] = await Promise.all([
+          // カテゴリ取得APIを呼び出す
           axios.get(
             "/api/categories",
             { signal: controller.signal }
           ),
+          // タグ取得APIを呼び出す
           axios.get(
             "/api/tags",
             { signal: controller.signal }
@@ -155,9 +162,9 @@ function ArticleList() {
     fetchArticles();
 
     return () => controller.abort();
-  }, [status, categoryId, tagIds, keyword, sort, reloadVersion]);
+  }, [status, categoryId, tagIds, keyword, sort, reloadVersion, user]);
 
-  // 登録・更新・削除後にGET /api/articlesを再実行
+  // 登録・更新・削除後に記事一覧取得APIを再実行
   const reloadArticles = () => {
     setReloadVersion((prev) => prev + 1);
   };
@@ -259,7 +266,7 @@ function ArticleList() {
     const targetArticle = articles.find(
       (article) => article.id === articleId
     );
-    if (!targetArticle || updatingStatusId !== null || deletingId !== null) return;
+    if (!targetArticle || !canEditArticle(user, targetArticle) || updatingStatusId !== null || deletingId !== null) return;
     if (targetArticle.status === newStatus) return;
     setError("");
     setUpdatingStatusId(articleId);
@@ -283,6 +290,8 @@ function ArticleList() {
   // 確認ダイアログ表示後、OKボタン押下されたら記事を削除
   const handleDelete = async (articleId) => {
     if (updatingStatusId !== null || deletingId !== null) return;
+    const targetArticle = articles.find((article) => article.id === articleId);
+    if (!canEditArticle(user, targetArticle)) return;
     const confirmed = window.confirm("この記事を削除しますか？");
     if (!confirmed) return;
     setError("");
@@ -311,19 +320,19 @@ function ArticleList() {
           記事一覧
         </h1>
         <div className="article-list-header-actions">
-          <button type="button" className="management-button"
+          {canManage && <button type="button" className="management-button"
             onClick={() => navigate("/categories")}
           >
             カテゴリ管理
-          </button>
-          <button type="button" className="management-button"
+          </button>}
+          {canManage && <button type="button" className="management-button"
             onClick={() => navigate("/tags")}
           >
             タグ管理
-          </button>
-          <button type="button" className="create-button" onClick={handleCreate}>
+          </button>}
+          {canManage && <button type="button" className="create-button" onClick={handleCreate}>
             新規作成
-          </button>
+          </button>}
         </div>
       </div>
 
@@ -379,6 +388,7 @@ function ArticleList() {
         <button type="button" className="filter-reset-button" onClick={resetFilters}>
           条件をクリア
         </button>
+
       </div>
 
       {error && (
@@ -484,7 +494,7 @@ function ArticleList() {
                       <span className={`status-badge status-${article.status.toLowerCase()}`}>
                         {statusLabels[article.status]}
                       </span>
-                      <select value={article.status}
+                      {canEditArticle(user, article) && <select value={article.status}
                         onChange={(event) =>
                           handleStatusChange(
                             article.id,
@@ -507,7 +517,7 @@ function ArticleList() {
                         <option value="ARCHIVED">
                           アーカイブ
                         </option>
-                      </select>
+                      </select>}
                     </div>
                     {/* ステータスがアーカイブの場合、2行目に表示 */}
                     {article.status === "ARCHIVED" && (
@@ -539,23 +549,23 @@ function ArticleList() {
                         詳細
                       </button>
 
-                      <button type="button" className="edit-button"
+                      {canEditArticle(user, article) && <button type="button" className="edit-button"
                         onClick={() =>
                           handleEdit(article.id)
                         }
                         disabled={deletingId !== null || updatingStatusId !== null}
                       >
                         編集
-                      </button>
+                      </button>}
 
-                      <button type="button" className="delete-button"
+                      {canEditArticle(user, article) && <button type="button" className="delete-button"
                         onClick={() =>
                           handleDelete(article.id)
                         }
                         disabled={deletingId !== null || updatingStatusId !== null}
                       >
                         削除
-                      </button>
+                      </button>}
                     </div>
                   </td>
                 </tr>

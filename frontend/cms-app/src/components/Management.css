@@ -1,5 +1,4 @@
 /* カテゴリ管理画面、タグ管理画面の共通スタイル */
-/* 管理画面全体 */
 .management-page {
   width: 100%;
   box-sizing: border-box;
@@ -52,7 +51,7 @@
   flex-wrap: wrap;
 }
 
-/* カテゴリ名・スラッグ入力欄 */
+/* カテゴリ名入力欄 */
 .management-field {
   display: flex;
   flex-direction: column;
@@ -91,14 +90,27 @@
   margin-left: 6px;
 }
 
+/* カテゴリ名の入力エラーを独立した赤枠で表示 */
+.management-field
 .management-field-error {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 8px 0 0;
+  padding: 12px 16px;
+  border: 1px solid #ff8a8a;
+  border-radius: 6px;
+  background-color: #fff1f1;
   color: #b91c1c;
-  font-size: 13px;
-  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
 }
 
 /* カテゴリ登録ボタン */
-.management-primary, .management-secondary, .management-danger {
+.management-primary,
+.management-secondary,
+.management-danger {
   font: inherit;
   font-weight: 600;
   border-radius: 5px;
@@ -143,7 +155,9 @@
 }
 
 /* カテゴリ登録ボタン */
-.management-primary:disabled, .management-secondary:disabled, .management-danger:disabled {
+.management-primary:disabled,
+.management-secondary:disabled,
+.management-danger:disabled {
   opacity: .55;
   cursor: not-allowed;
 }
@@ -174,7 +188,8 @@
   text-align: left;
 }
 
-.management-table th, .management-table td {
+.management-table th,
+.management-table td {
   padding: 13px 15px;
   border: 1px solid #d8dee8;
 }
@@ -190,4 +205,11 @@
 }
 
 /* 画面幅が狭い場合の余白調整 */
-@media (max-width: 600px) { .management-page { padding: 16px; } .management-panel { padding: 14px; } }
+@media (max-width: 600px) {
+  .management-page {
+    padding: 16px;
+  }
+  .management-panel {
+    padding: 14px;
+  }
+}

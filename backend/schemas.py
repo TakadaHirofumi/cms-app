@@ -7,7 +7,7 @@ from pydantic import (
     Field,
     field_validator,
 )
-from models import ArticleStatus
+from models import ArticleStatus, UserRole
 
 
 # 記事タイトルの最大文字数
@@ -22,34 +22,40 @@ SLUG_PATTERN = re.compile(r"^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$")
 # カテゴリ作成用スキーマ
 class CategoryCreate(BaseModel):
     name: str
-    slug: str
 
     @field_validator("name")
     @classmethod
     def validate_name(cls, value: str) -> str:
         # カテゴリ名の未入力・文字数チェック
         value = value.strip()
-        if not value or len(value) > NAME_MAX_LENGTH:
+        if not value:
+            raise ValueError("カテゴリ名を入力してください。")
+        if len(value) > NAME_MAX_LENGTH:
             raise ValueError("カテゴリ名は30文字以内で入力してください。")
-        return value
-
-    @field_validator("slug")
-    @classmethod
-    def validate_slug(cls, value: str) -> str:
-        # スラッグの半角英数字・ハイフン、最大200文字チェック
-        if len(value) > SLUG_MAX_LENGTH or not SLUG_PATTERN.fullmatch(value):
-            raise ValueError("スラッグは200文字以内の英数字とハイフンで入力してください。")
         return value
 
 # カテゴリ取得用スキーマ
 class CategoryResponse(BaseModel):
     id: int
     name: str
-    slug: str
 
     model_config = ConfigDict(
         from_attributes=True
     )
+
+# タグ登録用スキーマ
+class TagCreate(BaseModel):
+    name: str
+
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("タグ名を入力してください。")
+        if len(value) > NAME_MAX_LENGTH:
+            raise ValueError("タグ名は30文字以内で入力してください。")
+        return value
 
 # タグ取得用スキーマ
 class TagResponse(BaseModel):
@@ -143,6 +149,7 @@ class ArticleResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     is_scheduled: bool = False
+    author_user_id: int
 
     model_config = ConfigDict(
         from_attributes=True
@@ -181,3 +188,80 @@ class RevisionResponse(BaseModel):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+# ユーザー登録・ログイン・権限変更用スキーマ
+class UserRegister(BaseModel):
+    email: str
+    password: str
+    display_name: str
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, value: str) -> str:
+        value = value.strip().lower()
+        if len(value) > 255:
+            raise ValueError("メールアドレスは255文字以内で入力してください。")
+        if not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", value):
+            raise ValueError("有効なメールアドレスを入力してください。")
+        return value
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, value: str) -> str:
+        if len(value) > 72:
+            raise ValueError("パスワードは72文字以内で入力してください。")
+        if len(value.encode("utf-8")) > 72:
+            raise ValueError("パスワードはUTF-8で72バイト以内で入力してください。")
+        if len(value) < 8 or not re.search(r"[A-Za-z]", value) or not re.search(r"[0-9]", value):
+            raise ValueError("パスワードは8文字以上で英字と数字を含めてください。")
+        return value
+
+    @field_validator("display_name")
+    @classmethod
+    def validate_display_name(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("表示名を入力してください。")
+        if len(value) > 100:
+            raise ValueError("表示名は100文字以内で入力してください。")
+        return value
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
+class UserResponse(BaseModel):
+    id: int
+    email: str
+    display_name: str
+    role: UserRole
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+class UserRoleUpdate(BaseModel):
+    role: UserRole
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+# 通知一覧・未読件数用スキーマ
+class NotificationResponse(BaseModel):
+    id: int
+    comment_id: int
+    article_id: int
+    article_title: str
+    author_name: str
+    body: str
+    is_read: bool
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+class UnreadCountResponse(BaseModel):
+    unread_count: int
+
+# 記事詳細画面で取得したコメントIDのみ既読対象にする
+class NotificationReadRequest(BaseModel):
+    comment_ids: list[int]

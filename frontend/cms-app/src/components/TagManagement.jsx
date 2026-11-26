@@ -28,7 +28,7 @@ export default function TagManagement() {
       setLoading(true);
       setError("");
       try {
-        // 一覧取得APIを呼び出す
+        // タグ一覧取得APIを呼び出す
         const response = await axios.get(
           "/api/tags",
           { signal: controller.signal }
@@ -57,7 +57,7 @@ export default function TagManagement() {
     setDeletingId(tag.id);
     setError("");
     try {
-      // 削除APIを呼び出す
+      // タグ削除APIを呼び出す
       await axios.delete(
         `/api/tags/${tag.id}`
       );
@@ -75,7 +75,7 @@ export default function TagManagement() {
     <main className="management-page">
       <div className="management-header">
         <h1>タグ管理</h1>
-        <button type="button" className="management-secondary" onClick={() => navigate("/")}>
+        <button type="button" className="management-secondary" onClick={() => navigate("/articles")}>
           記事一覧へ戻る
         </button>
       </div>

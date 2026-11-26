@@ -1,0 +1,75 @@
+/* コメント通知一覧・一括既読画面 */
+.phase4-page {
+    max-width:900px;
+    margin:36px auto;
+    padding:0 24px 48px;
+}
+
+.phase4-page h1 {
+    font-size:30px;
+    margin-bottom:24px;
+}
+
+/* 通知の取得・既読更新時のエラー */
+.phase4-error {
+    margin:16px 0;
+    padding:12px 16px;
+    border:1px solid #fca5a5;
+    border-radius:6px;
+    background:#fef2f2;
+    color:#b91c1c;
+    font-weight:600;
+}
+
+/* 通知一覧と各通知の表示 */
+.phase4-notifications {
+    padding:0;
+    list-style:none;
+}
+
+.phase4-notifications li {
+    border:1px solid #d1d5db;
+    padding:16px;
+    margin:12px 0;
+    border-radius:6px;
+}
+
+.phase4-notifications
+.phase4-unread {
+    background:#eff6ff;
+    border-color:#93c5fd;
+}
+
+.phase4-notifications p {
+    overflow-wrap:anywhere;
+    white-space:pre-wrap;
+}
+
+/* 一括既読ボタン */
+.phase4-page button {
+    padding:9px 16px;
+    border:1px solid #2563eb;
+    border-radius:6px;
+    background:#2563eb;
+    color:#fff;
+    cursor:pointer;
+}
+
+.phase4-page button:disabled {
+    opacity:.55;
+    cursor:not-allowed;
+}
+
+/* ヘッダー */
+.phase4-notification-header {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    margin-bottom:24px;
+}
+
+/* 記事一覧画面へ戻るボタン */
+.phase4-notification-header h1 {
+    margin:0;
+}

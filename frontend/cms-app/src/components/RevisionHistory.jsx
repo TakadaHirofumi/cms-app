@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 
 
+// 記事のステータス表示用ラベル
 const statusLabels = {
   DRAFT: "下書き",
   PUBLISHED: "公開",

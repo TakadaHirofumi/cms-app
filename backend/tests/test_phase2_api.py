@@ -3,18 +3,11 @@ import os
 import uuid
 import pytest
 from datetime import datetime, timedelta
-from fastapi.testclient import TestClient
 from sqlalchemy import select, text
 from database import SessionLocal, engine
 from main import app
 from models import Article, Category, Tag
 
-
-# テストクライアントを作成
-@pytest.fixture
-def client():
-    with TestClient(app) as test_client:
-        yield test_client
 
 # テスト用記事の作成と削除を行う関数
 @pytest.fixture
@@ -87,7 +80,7 @@ def create_category(client):
     def create(unique, suffix=""):
         response = client.post(
             "/api/categories",
-            json={"name": "カテゴリ" + unique + suffix, "slug": "cat-" + unique + suffix},
+            json={"name": "カテゴリ" + unique + suffix},
         )
         assert response.status_code == 201, response.text
         category = response.json()
@@ -266,16 +259,16 @@ def test_status_change_and_refetch(client, create_article):
     os.getenv("CMS_PERSISTENCE_PHASE") not in ("create", "verify"),
     reason="Set CMS_PERSISTENCE_PHASE=create or verify to run persistence check",
 )
-def test_data_persists_across_server_restart(client):
+def test_data_persists_across_server_restart(persistence_client):
+    client = persistence_client
     phase = os.environ["CMS_PERSISTENCE_PHASE"]
     suffix = os.environ.get("CMS_PERSISTENCE_SUFFIX", "manual-restart-check")
     slug = "pytest-restart-" + suffix
-    category_slug = "restart-" + suffix
     tag_name = "restart-" + suffix
     if phase == "create":
         category_response = client.post(
             "/api/categories",
-            json={"name": "再起動確認" + suffix, "slug": category_slug},
+            json={"name": "再起動確認" + suffix},
         )
         assert category_response.status_code == 201, category_response.text
         response = client.post(
@@ -298,5 +291,5 @@ def test_data_persists_across_server_restart(client):
         response = client.get(f"/api/articles/{article_id}")
         assert response.status_code == 200, response.text
         assert response.json()["slug"] == slug
-        assert response.json()["category"]["slug"] == category_slug
+        assert response.json()["category"]["name"] == "再起動確認" + suffix
         assert tag_name in [tag["name"] for tag in response.json()["tags"]]

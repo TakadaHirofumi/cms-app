@@ -7,13 +7,10 @@ import axios from "axios";
 import "./Management.css";
 
 
-// スラッグの入力値を検証する正規表現（英数字とハイフンのみ）
-const SLUG_PATTERN = /^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$/;
-
 function getApiError(error, fallback) {
   const status = error.response?.status;
-  if (status === 409) return "カテゴリ名またはスラッグが既に登録されています。";
-  if (status === 422) return "入力内容が正しくありません。カテゴリ名とスラッグを確認してください。";
+  if (status === 409) return "カテゴリ名が既に登録されています。";
+  if (status === 422) return "入力内容が正しくありません。カテゴリ名を確認してください。";
   return fallback;
 }
 
@@ -24,14 +21,13 @@ export default function CategoryManagement() {
   const [categories, setCategories] = useState([]);
   // カテゴリ名の入力値
   const [name, setName] = useState("");
-  // スラッグの入力値
-  const [slug, setSlug] = useState("");
   // 入力チェックエラー
   const [errors, setErrors] = useState({});
   // APIエラーメッセージ
   const [error, setError] = useState("");
   // カテゴリ一覧を取得中か確認
   const [loading, setLoading] = useState(true);
+  // 登録・削除処理中か確認
   const [busy, setBusy] = useState(false);
   // 削除処理中の対象ID
   const [deletingId, setDeletingId] = useState(null);
@@ -45,10 +41,12 @@ export default function CategoryManagement() {
       setLoading(true);
       setError("");
       try {
-        // 一覧取得APIを呼び出す
+        // カテゴリ一覧取得APIを呼び出す
         const response = await axios.get(
           "/api/categories",
-          { signal: controller.signal }
+          {
+            signal: controller.signal
+          }
         );
         if (!controller.signal.aborted) setCategories(response.data);
       } catch (err) {
@@ -66,14 +64,13 @@ export default function CategoryManagement() {
 
   const reload = useCallback(() => setReloadVersion((v) => v + 1), []);
 
-  // カテゴリ名、スラッグを保存前に検証する（サーバーでも検証）
+  // カテゴリ名を保存前に検証する（サーバーでも検証）
   function validate() {
     const next = {};
-    if (!name.trim() || Array.from(name.trim()).length > 30) {
+    if (!name.trim()) {
+      next.name = "カテゴリ名を入力してください。";
+    } else if (Array.from(name.trim()).length > 30) {
       next.name = "カテゴリ名は30文字以内で入力してください。";
-    }
-    if (slug.length > 200 || !SLUG_PATTERN.test(slug)) {
-      next.slug = "スラッグは200文字以内の英数字とハイフンで入力してください。";
     }
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -89,10 +86,11 @@ export default function CategoryManagement() {
       // カテゴリ登録APIを呼び出す
       await axios.post(
         "/api/categories",
-        { name: name.trim(), slug }
+        {
+          name: name.trim()
+        }
       );
       setName("");
-      setSlug("");
       setErrors({});
       reload();
     } catch (err) {
@@ -113,7 +111,7 @@ export default function CategoryManagement() {
     setDeletingId(category.id);
     setError("");
     try {
-      // 削除APIを呼び出す
+      // カテゴリ削除APIを呼び出す
       await axios.delete(
         `/api/categories/${category.id}`
       );
@@ -131,7 +129,7 @@ export default function CategoryManagement() {
     <main className="management-page">
       <div className="management-header">
         <h1>カテゴリ管理</h1>
-        <button type="button" className="management-secondary" onClick={() => navigate("/")}>
+        <button type="button" className="management-secondary" onClick={() => navigate("/articles")}>
           記事一覧へ戻る
         </button>
       </div>
@@ -148,13 +146,6 @@ export default function CategoryManagement() {
               placeholder="例：技術" aria-invalid={Boolean(errors.name)} aria-describedby={errors.name ? "category-name-error" : undefined} />
             {errors.name && <p id="category-name-error" className="management-field-error">{errors.name}</p>}
           </div>
-          <div className="management-field">
-            <label htmlFor="category-slug">スラッグ <span className="management-required">必須</span></label>
-            <input id="category-slug" value={slug} maxLength={31}
-              onChange={(e) => { setSlug(e.target.value); setErrors((prev) => ({ ...prev, slug: "" })); }}
-              placeholder="例：technology" aria-invalid={Boolean(errors.slug)} aria-describedby={errors.slug ? "category-slug-error" : undefined} />
-            {errors.slug && <p id="category-slug-error" className="management-field-error">{errors.slug}</p>}
-          </div>
           <button type="submit" className="management-primary" disabled={busy || deletingId !== null}>
             {busy ? "登録中..." : "カテゴリを登録"}
           </button>
@@ -168,10 +159,10 @@ export default function CategoryManagement() {
         ) : (
           <div className="management-table-scroll">
             <table className="management-table">
-              <thead><tr><th scope="col">ID</th><th scope="col">カテゴリ名</th><th scope="col">スラッグ</th><th scope="col">操作</th></tr></thead>
+              <thead><tr><th scope="col">ID</th><th scope="col">カテゴリ名</th><th scope="col">操作</th></tr></thead>
               <tbody>{categories.map((category) => (
                 <tr key={category.id}>
-                  <td>{category.id}</td><td>{category.name}</td><td>{category.slug}</td>
+                  <td>{category.id}</td><td>{category.name}</td>
                   <td><button type="button" className="management-danger"
                     disabled={busy || deletingId !== null} onClick={() => handleDelete(category)}>
                     {deletingId === category.id ? "削除中..." : "削除"}

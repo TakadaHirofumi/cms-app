@@ -1,0 +1,59 @@
+/* ADMIN専用のユーザー一覧・権限変更画面 */
+.phase4-page {
+    max-width:900px;
+    margin:36px auto;
+    padding:0 24px 48px;
+}
+
+.phase4-page h1 {
+    font-size:30px;
+    margin-bottom:24px;
+}
+
+/* ユーザー一覧取得・権限変更時のエラー */
+.phase4-error {
+    margin:16px 0;
+    padding:12px 16px;
+    border:1px solid #fca5a5;
+    border-radius:6px;
+    background:#fef2f2;
+    color:#b91c1c;
+    font-weight:600;
+}
+
+/* ユーザー一覧テーブル */
+.phase4-table-scroll {
+    overflow-x:auto;
+    margin-top:20px;
+}
+
+.phase4-table {
+    width:100%;
+    border-collapse:collapse;
+}
+
+.phase4-table th,
+.phase4-table td {
+    border:1px solid #cbd5e1;
+    padding:12px;
+    text-align:left;
+}
+
+.phase4-table select {
+    padding:8px;
+}
+
+/* 権限変更時のボタン状態 */
+.phase4-page button {
+    padding:9px 16px;
+    border:1px solid #2563eb;
+    border-radius:6px;
+    background:#2563eb;
+    color:#fff;
+    cursor:pointer;
+}
+
+.phase4-page button:disabled {
+    opacity:.55;
+    cursor:not-allowed;
+}

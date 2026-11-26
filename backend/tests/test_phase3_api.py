@@ -1,18 +1,11 @@
 # CMSアプリのテストコード（フェーズ3版）
 import uuid
 import pytest
-from fastapi.testclient import TestClient
 from sqlalchemy import select, func
 from database import SessionLocal
 from main import app
 from models import Article, Comment, Revision
 
-
-# テストクライアントを作成
-@pytest.fixture
-def client():
-    with TestClient(app) as test_client:
-        yield test_client
 
 # テスト用記事の作成と削除を行う関数
 @pytest.fixture
@@ -119,7 +112,7 @@ def test_published_article_accepts_comment_and_lists_it(client, make_article):
     )
     assert count_db_comments(article_id) == 1
 
-# テストケース2・3：下書き・アーカイブ済み記事へのコメント投稿拒否
+# テストケース2～3：下書き・アーカイブ済み記事へのコメント投稿拒否
 # 期待値：どちらも403が返り、コメントがDBに保存されないこと。
 @pytest.mark.parametrize("article_status", ["DRAFT", "ARCHIVED"])
 def test_non_published_article_rejects_comment(client, make_article, article_status):

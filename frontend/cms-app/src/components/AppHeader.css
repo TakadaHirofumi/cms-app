@@ -1,0 +1,51 @@
+/* 画面共通ヘッダー・ナビゲーション */
+.phase4-header {
+    display:flex;
+    justify-content:flex-end;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:16px;
+    padding:14px 28px;
+    border-bottom:1px solid #d1d5db;
+    background:#f8fafc;
+}
+
+/* ユーザーメニューの配置 */
+.phase4-header nav {
+    display:flex;
+    align-items:center;
+    gap:16px;
+    flex-wrap:wrap;
+}
+
+.phase4-header a {
+    color:#1d4ed8;
+    font-weight:600;
+}
+
+/* 未読通知件数のバッジ（NotificationBellでも使用） */
+.phase4-count {
+    background:#dc2626;
+    color:#fff;
+    border-radius:99px;
+    padding:2px 7px;
+}
+
+/* ブラウザ通知の許可ボタン */
+.phase4-header
+.phase4-notification-enable {
+    padding:0;
+    border:none;
+    background:transparent;
+    color:#1d4ed8;
+    font:inherit;
+    font-weight:600;
+    text-decoration:underline;
+    cursor:pointer;
+}
+
+.phase4-header
+.phase4-notification-enable:disabled {
+    opacity:.55;
+    cursor:not-allowed;
+}

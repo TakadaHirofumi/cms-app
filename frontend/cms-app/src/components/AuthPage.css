@@ -1,0 +1,98 @@
+/* ユーザー登録・ログイン画面 */
+.phase4-page {
+    max-width:900px;
+    margin:36px auto;
+    padding:0 24px 48px;
+}
+
+.phase4-page h1 {
+    font-size:30px;
+    margin-bottom:24px;
+}
+
+/* ログイン・登録フォームの入力項目 */
+.phase4-form {
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+    max-width:480px;
+}
+
+.phase4-form label {
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+    font-weight:600;
+}
+
+.phase4-form input {
+    padding:11px;
+    border:1px solid #94a3b8;
+    border-radius:5px;
+    font:inherit;
+}
+
+/* 入力エラー表示 */
+.phase4-error {
+    margin:16px 0;
+    padding:12px 16px;
+    border:1px solid #fca5a5;
+    border-radius:6px;
+    background:#fef2f2;
+    color:#b91c1c;
+    font-weight:600;
+}
+
+/* 送信ボタンと処理中の状態 */
+.phase4-page button {
+    padding:9px 16px;
+    border:1px solid #2563eb;
+    border-radius:6px;
+    background:#2563eb;
+    color:#fff;
+    cursor:pointer;
+}
+
+.phase4-page button:disabled {
+    opacity:.55;
+    cursor:not-allowed;
+}
+
+/* ログイン・登録画面のフォーム領域を画面中央に配置 */
+.phase4-page.phase4-auth-page {
+    box-sizing:border-box;
+    width:100%;
+    max-width:528px;
+    margin:36px auto;
+}
+
+.phase4-auth-page h1 {
+    text-align:left;
+}
+
+.phase4-auth-page
+.phase4-form {
+    width:100%;
+    margin:0 auto;
+}
+
+.phase4-auth-page
+.phase4-auth-link {
+    margin:16px 0;
+    text-align:left;
+}
+
+/* 未ログインでの記事一覧遷移ボタン */
+.phase4-auth-page
+.phase4-guest-button {
+    display:block;
+    box-sizing:border-box;
+    width:100%;
+    background:#fff;
+    color:#2563eb;
+}
+
+.phase4-auth-page
+.phase4-guest-button:hover:not(:disabled) {
+    background:#eff6ff;
+}
